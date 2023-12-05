@@ -1,20 +1,9 @@
-use std::fs::File;
-use std::io::BufRead;
-use std::io;
-use std::path::Path;
+mod utils;
 
 static CONVERT_NUMBERS: bool = true;
 
 static INPUT_FILE: &str = "./01_input.txt";
 static NUMBERS: &[(&str, &str)] = &[("1", "one"), ("2", "two"), ("3", "three"), ("4", "four"), ("5", "five"), ("6", "six"), ("7", "seven"), ("8", "eight"), ("9", "nine")];
-
-// The output is wrapped in a Result to allow matching on errors
-// Returns an Iterator to the Reader of the lines of the file.
-fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
-where P: AsRef<Path>, {
-    let file = File::open(filename)?;
-    Ok(io::BufReader::new(file).lines())
-}
 
 fn convert_spelled_numbers_to_digits(text: &str) -> String {
     let dup = NUMBERS.iter().fold(text.to_owned(), |acc, num| acc.replace(num.1, &(num.1.to_owned() + num.1)));
@@ -46,7 +35,7 @@ fn get_value(text: &str) -> u8 {
  }
 
 fn main() {
-    if let Ok(lines) = read_lines(INPUT_FILE) {
+    if let Ok(lines) = utils::read_lines(INPUT_FILE) {
         let mut sum: u32 = 0;
         for line in lines {
             if let Ok(text) = line {

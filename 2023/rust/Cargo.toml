@@ -8,3 +8,10 @@ authors = ["Bruno Conde <brunompconde@gmail.com>"]
 name = "01_trebuchet"
 path = "src/01_trebuchet.rs"
 
+[[bin]]
+name = "02_cube_conundrum"
+path = "src/02_cube_conundrum.rs"
+
+[dependencies]
+regex = "1.10.2"
+

@@ -137,8 +137,8 @@ fn main() {
 
         // calculate gear rations
         let sum_gear_rations = symbol_nums_map.iter()
-        .filter(|(_, nums)| nums.len() == 2)
-        .fold(0, |acc, (_, nums)| acc + nums.iter().copied().reduce(|acc, num| num * acc).unwrap());
+            .filter(|(_, nums)| nums.len() == 2)
+            .fold(0, |acc, (_, nums)| acc + nums.iter().copied().reduce(|acc, num| num * acc).unwrap());
 
         println!("Sum of engine schematic part numbers: {}", sum);
 

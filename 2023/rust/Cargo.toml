@@ -16,6 +16,10 @@ path = "src/02_cube_conundrum.rs"
 name = "03_gear_ratios"
 path = "src/03_gear_ratios.rs"
 
+[[bin]]
+name = "04_scratchcards"
+path = "src/04_scratchcards.rs"
+
 [dependencies]
 regex = "1.10.2"
 

@@ -20,6 +20,11 @@ path = "src/03_gear_ratios.rs"
 name = "04_scratchcards"
 path = "src/04_scratchcards.rs"
 
+[[bin]]
+name = "05_seed_fertilizer"
+path = "src/05_seed_fertilizer.rs"
+
+
 [dependencies]
 regex = "1.10.2"
 

@@ -3,8 +3,8 @@ mod utils;
 static INPUT_FILE: &str = "./06_input.txt";
 
 struct Race {
-    time: u32,
-    distance: u32
+    time: u64,
+    distance: u64
 }
 
 fn count_records(race: &Race) -> u32 {
@@ -29,23 +29,39 @@ fn parse_races(times: &str, distances: &str) -> Vec<Race> {
         .collect()
 }
 
+fn parse_single_race(times: &str, distances: &str) -> Race {
+    let time = times[5..].trim().replace(' ', "").parse().unwrap();
+    let distance = distances[9..].trim().replace(' ', "").parse().unwrap();
+
+    Race {time, distance }
+}
+
 fn main() {
     if let Ok(lines) = utils::read_lines(INPUT_FILE) {
-        let mut total: u32 = 1;
+        let mut total1: u32 = 1;
+        let mut total2: u32 = 1;
 
         let mut it = lines.into_iter();
 
         if let Ok(times) = it.nth(0).unwrap() {
             if let Ok(distances) = it.nth(0).unwrap() {
+
+                // part 1 - multiple races
                 let races = parse_races(&times, &distances);
 
                 for race in races {
-                    total *= count_records(&race);
+                    total1 *= count_records(&race);
                 }
+
+                // part 2 - single race
+                let race = parse_single_race(&times, &distances);
+                total2 = count_records(&race);
+
             }
         }
 
-        println!("Multiplication of the number of ways the record is beat: {}", total);
+        println!("[Part 1] Multiplication of the number of ways the record is beat: {}", total1);
+        println!("[Part 2] Number of ways the record is beat: {}", total2);
     } else {
         eprintln!("Could not extract races from {}", INPUT_FILE);
     }

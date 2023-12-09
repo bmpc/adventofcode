@@ -24,6 +24,10 @@ path = "src/04_scratchcards.rs"
 name = "05_seed_fertilizer"
 path = "src/05_seed_fertilizer.rs"
 
+[[bin]]
+name = "06_wait_for_it"
+path = "src/06_wait_for_it.rs"
+
 
 [dependencies]
 regex = "1.10.2"

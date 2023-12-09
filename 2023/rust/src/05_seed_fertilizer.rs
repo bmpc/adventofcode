@@ -1,7 +1,7 @@
 mod utils;
 
-static INPUT_FILE: &str = "./05_input.txt";
-// static INPUT_FILE: &str = "./05_input_test.txt";
+static INPUT_FILE: &str = "./input/05_input.txt";
+// static INPUT_FILE: &str = "./input/05_input_test.txt";
 
 #[derive(Copy, Clone)]
 struct Mapping {

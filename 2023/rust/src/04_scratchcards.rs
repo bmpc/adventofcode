@@ -1,6 +1,6 @@
 mod utils;
 
-static INPUT_FILE: &str = "./04_input.txt";
+static INPUT_FILE: &str = "./input/04_input.txt";
 
 struct Card {
     id: u32,

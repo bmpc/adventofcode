@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 
 mod utils;
 
-static INPUT_FILE: &str = "./02_input.txt";
+static INPUT_FILE: &str = "./input/02_input.txt";
 
 #[derive(Eq)]
 struct Game {

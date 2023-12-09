@@ -1,6 +1,7 @@
 mod utils;
 
-static INPUT_FILE: &str = "./06_input.txt";
+static INPUT_FILE: &str = "./input/06_input.txt";
+//static INPUT_FILE: &str = "./input/06_input_test.txt";
 
 struct Race {
     time: u64,

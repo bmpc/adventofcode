@@ -2,7 +2,7 @@ mod utils;
 
 static CONVERT_NUMBERS: bool = true;
 
-static INPUT_FILE: &str = "./01_input.txt";
+static INPUT_FILE: &str = "./input/01_input.txt";
 static NUMBERS: &[(&str, &str)] = &[("1", "one"), ("2", "two"), ("3", "three"), ("4", "four"), ("5", "five"), ("6", "six"), ("7", "seven"), ("8", "eight"), ("9", "nine")];
 
 fn convert_spelled_numbers_to_digits(text: &str) -> String {

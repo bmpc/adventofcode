@@ -4,7 +4,7 @@ use std::hash::{Hash, Hasher};
 
 mod utils;
 
-const INPUT_FILE: &str = "./03_input.txt";
+const INPUT_FILE: &str = "./input/03_input.txt";
 
 const WIDTH: usize = 140;
 const HEIGHT: usize = 140;

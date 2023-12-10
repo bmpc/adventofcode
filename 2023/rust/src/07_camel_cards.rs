@@ -2,8 +2,10 @@ use std::cmp::Ordering;
 
 mod utils;
 
+const RESOLVE_JOKERS: bool = true; // true -> part 2 ; false -> part 1
+
 static INPUT_FILE: &str = "./input/07_input.txt";
-// static INPUT_FILE: &str = "./input/07_input_test.txt";
+//static INPUT_FILE: &str = "./input/07_input_test.txt";
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 enum Card {
@@ -21,7 +23,6 @@ enum Card {
     _3 = 2, 
     _2 = 1
 }
-
 
 type Err = ();
 
@@ -77,6 +78,14 @@ impl Ord for Hand {
                 for i in 0..5 {
                     ord = self.cards[i].cmp(&other.cards[i]);
                     if ord != Ordering::Equal {
+                        // handle case where J is the lowest card when the type is the same
+                        if RESOLVE_JOKERS {
+                            if self.cards[i] == Card::J {
+                                ord = Ordering::Less;
+                            } else if other.cards[i] == Card::J {
+                                ord = Ordering::Greater;
+                            }
+                        }
                         break;
                     }
                 }
@@ -114,6 +123,28 @@ impl Hand {
         let mut cards_map: [usize; 13] = [0; 13];
         for card in &self.cards {
             cards_map[*card as usize - 1] += 1;
+        }
+
+        // resolve Jokers - omg... call the batman :)
+        if RESOLVE_JOKERS && cards_map[9] > 0 { // Jokers are strong with this one!
+            let mut max: usize = 0;
+            let mut max_card = 1;
+            for (i, count) in cards_map.iter().enumerate() { // skipping J
+                if i == 9 { // skip Jokers
+                    continue;
+                }
+                if *count >= max {
+                    max = *count;
+                    max_card = i;
+                }
+            }
+
+            if max == 0 { // JJJJJ
+                max_card = (Card::A as usize) - 1;
+            }
+
+            cards_map[max_card] += cards_map[9]; // count Jokers as the highest card
+            cards_map[9] = 0;
         }
 
         let mut found_two = false;
@@ -187,7 +218,7 @@ fn main() {
             sum += (i + 1) as u32 * hand.bid;
         }
 
-        println!("[Part 1] Total winnings: {}", sum);
+        println!("[{}] Total winnings: {}", if RESOLVE_JOKERS { "Part 2" } else { "Part 1" }, sum);
     } else {
         eprintln!("Could not Camel Cards from {}", INPUT_FILE);
     }

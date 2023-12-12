@@ -36,6 +36,11 @@ path = "src/07_camel_cards.rs"
 name = "08_haunted_wasteland"
 path = "src/08_haunted_wasteland.rs"
 
+[[bin]]
+name = "09_mirage_maintenance"
+path = "src/09_mirage_maintenance.rs"
+
+
 [dependencies]
 regex = "1.10.2"
 

@@ -40,6 +40,10 @@ path = "src/08_haunted_wasteland.rs"
 name = "09_mirage_maintenance"
 path = "src/09_mirage_maintenance.rs"
 
+[[bin]]
+name = "10_pipe_maze"
+path = "src/10_pipe_maze.rs"
+
 
 [dependencies]
 regex = "1.10.2"

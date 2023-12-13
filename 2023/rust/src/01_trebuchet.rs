@@ -3,7 +3,7 @@ mod utils;
 static CONVERT_NUMBERS: bool = true;
 
 static INPUT_FILE: &str = "./input/01_input.txt";
-static NUMBERS: &[(&str, &str)] = &[("1", "one"), ("2", "two"), ("3", "three"), ("4", "four"), ("5", "five"), ("6", "six"), ("7", "seven"), ("8", "eight"), ("9", "nine")];
+static NUMBERS: [(&str, &str); 9] = [("1", "one"), ("2", "two"), ("3", "three"), ("4", "four"), ("5", "five"), ("6", "six"), ("7", "seven"), ("8", "eight"), ("9", "nine")];
 
 fn convert_spelled_numbers_to_digits(text: &str) -> String {
     let dup = NUMBERS.iter().fold(text.to_owned(), |acc, num| acc.replace(num.1, &(num.1.to_owned() + num.1)));

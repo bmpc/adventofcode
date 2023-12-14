@@ -44,6 +44,10 @@ path = "src/09_mirage_maintenance.rs"
 name = "10_pipe_maze"
 path = "src/10_pipe_maze.rs"
 
+[[bin]]
+name = "11_cosmic_expansion"
+path = "src/11_cosmic_expansion.rs"
+
 
 [dependencies]
 regex = "1.10.2"

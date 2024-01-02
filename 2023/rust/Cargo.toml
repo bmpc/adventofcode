@@ -52,6 +52,10 @@ path = "src/11_cosmic_expansion.rs"
 name = "12_hot_springs"
 path = "src/12_hot_springs.rs"
 
+[[bin]]
+name = "13_point_of_incidence"
+path = "src/13_point_of_incidence.rs"
+
 
 [dependencies]
 regex = "1.10.2"

@@ -56,6 +56,10 @@ path = "src/12_hot_springs.rs"
 name = "13_point_of_incidence"
 path = "src/13_point_of_incidence.rs"
 
+[[bin]]
+name = "14_parabolic_reflector_dish"
+path = "src/14_parabolic_reflector_dish.rs"
+
 
 [dependencies]
 regex = "1.10.2"

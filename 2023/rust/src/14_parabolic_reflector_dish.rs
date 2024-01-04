@@ -1,11 +1,11 @@
 mod utils;
 
 use std::fmt;
+use std::collections::HashMap;
 
-const SPIN_CYCLES: u32 = 1100;
-// const SPIN_CYCLES: u32 = 1000000000;
+const SPIN_CYCLES: u32 = 1000000000;
 
-//const INPUT_FILE: &str = "./input/14_input_test.txt";
+// const INPUT_FILE: &str = "./input/14_input_test.txt";
 const INPUT_FILE: &str = "./input/14_input.txt";
 
 struct ParabolicDish {
@@ -181,20 +181,41 @@ fn main() {
         let load = dish.north_load();
         println!("[Part 1] Total load of north support beams: {}", load);
 
-        for _ in 1..SPIN_CYCLES {
+        struct Hit {
+            cycle: u32,
+            prev_interval: u32
+        }
+
+        let mut load2 = 0;
+        let mut remaining: i32 = -1;
+        let mut cycles: HashMap<u32, Hit> = HashMap::new();
+        for cycle in 1..SPIN_CYCLES {
             dish2.tilt_north();
             dish2.tilt_west();
             dish2.tilt_south();
             dish2.tilt_east();
-            let load_after_cycles = dish2.north_load();
-            println!("{}", load_after_cycles);
+            let load_after_cycle = dish2.north_load();
+
+            if remaining == 0 {
+                load2 = load_after_cycle;
+                break;
+            } else if remaining > 0 {
+                remaining -= 1;
+            } else {
+                if cycles.contains_key(&load_after_cycle) {
+                    let hit = cycles.get(&load_after_cycle).unwrap();
+                    if hit.prev_interval > 0 && cycle - hit.cycle == hit.prev_interval {
+                        remaining = ((SPIN_CYCLES - cycle) % hit.prev_interval) as i32 - 1;
+                    } else {
+                        cycles.insert(load_after_cycle, Hit {cycle, prev_interval: cycle - hit.prev_interval});    
+                    }
+                } else {
+                    cycles.insert(load_after_cycle, Hit { cycle, prev_interval: 0});
+                }
+            }
         }
 
-        let load_after_cycles = dish2.north_load();
-        
-        //println!("{}", dish);
-
-        println!("[Part 2] Total load of north support beams after {} cycles: {}", SPIN_CYCLES, load_after_cycles);
+        println!("[Part 2] Total load of north support beams after {} cycles: {}", SPIN_CYCLES, load2);
     } else {
         eprintln!("Could not load Parabolic Reflection Dish {}", INPUT_FILE);
     }

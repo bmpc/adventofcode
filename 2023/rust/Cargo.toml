@@ -60,6 +60,10 @@ path = "src/13_point_of_incidence.rs"
 name = "14_parabolic_reflector_dish"
 path = "src/14_parabolic_reflector_dish.rs"
 
+[[bin]]
+name = "15_lens_library"
+path = "src/15_lens_library.rs"
+
 
 [dependencies]
 regex = "1.10.2"

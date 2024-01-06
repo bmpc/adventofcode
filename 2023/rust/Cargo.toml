@@ -64,6 +64,10 @@ path = "src/14_parabolic_reflector_dish.rs"
 name = "15_lens_library"
 path = "src/15_lens_library.rs"
 
+[[bin]]
+name = "16_the_floor_will_be_lava"
+path = "src/16_the_floor_will_be_lava.rs"
+
 
 [dependencies]
 regex = "1.10.2"

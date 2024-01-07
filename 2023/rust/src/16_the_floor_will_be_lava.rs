@@ -124,8 +124,53 @@ fn main() {
         get_energized_tiles(&contraption, (0, 0), DIR::RIGHT, &mut visited);
 
         let sum1 = visited.keys().count();
+        
+        // part 2
+        let mut sum2 = 0;
+
+        // down
+        for i in 0..width {
+            let mut visited: HashMap<(i32, i32), DIR> = HashMap::new();
+            get_energized_tiles(&contraption, (i as i32, 0), DIR::DOWN, &mut visited);
+            let count = visited.keys().count();
+            if count > sum2 {
+                sum2 = count;
+            }
+        }
+
+        // up
+        for i in (0..width).rev() {
+            let mut visited: HashMap<(i32, i32), DIR> = HashMap::new();
+            get_energized_tiles(&contraption, (i as i32, height as i32 - 1), DIR::UP, &mut visited);
+            let count = visited.keys().count();
+            if count > sum2 {
+                sum2 = count;
+            }
+        }
+
+        // right
+        for i in 0..height {
+            let mut visited: HashMap<(i32, i32), DIR> = HashMap::new();
+            get_energized_tiles(&contraption, (0, i as i32), DIR::RIGHT, &mut visited);
+            let count = visited.keys().count();
+            if count > sum2 {
+                sum2 = count;
+            }
+        }
+
+        // left
+        for i in (0..height).rev() {
+            let mut visited: HashMap<(i32, i32), DIR> = HashMap::new();
+            get_energized_tiles(&contraption, (width as i32 - 1, i as i32), DIR::LEFT, &mut visited);
+            let count = visited.keys().count();
+            if count > sum2 {
+                sum2 = count;
+            }
+        }
+        
 
         println!("[Part 1] Sum of energized tiles: {}", sum1);
+        println!("[Part 2] Sum of energized tiles in optimal configuration: {}", sum2);
     } else {
         eprintln!("Could not contraption layout from {}", INPUT_FILE);
     }

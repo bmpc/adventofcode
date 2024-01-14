@@ -68,7 +68,10 @@ path = "src/15_lens_library.rs"
 name = "16_the_floor_will_be_lava"
 path = "src/16_the_floor_will_be_lava.rs"
 
+[[bin]]
+name = "17_clumsy_crucible"
+path = "src/17_clumsy_crucible.rs"
 
-[dependencies]
 regex = "1.10.2"
+pathfinding = "4.8.1"
 

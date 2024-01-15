@@ -72,6 +72,10 @@ path = "src/16_the_floor_will_be_lava.rs"
 name = "17_clumsy_crucible"
 path = "src/17_clumsy_crucible.rs"
 
+[[bin]]
+name = "18_lavaduct_lagoon"
+path = "src/18_lavaduct_lagoon.rs"
+
 regex = "1.10.2"
 pathfinding = "4.8.1"
 

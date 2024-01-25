@@ -80,6 +80,10 @@ path = "src/18_lavaduct_lagoon.rs"
 name = "19_aplenty"
 path = "src/19_aplenty.rs"
 
+[[bin]]
+name = "20_pulse_propagation"
+path = "src/20_pulse_propagation.rs"
+
 regex = "1.10.2"
 pathfinding = "4.8.1"
 

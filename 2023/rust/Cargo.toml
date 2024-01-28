@@ -84,6 +84,10 @@ path = "src/19_aplenty.rs"
 name = "20_pulse_propagation"
 path = "src/20_pulse_propagation.rs"
 
+[[bin]]
+name = "21_step_counter"
+path = "src/21_step_counter.rs"
+
 regex = "1.10.2"
 pathfinding = "4.8.1"
 

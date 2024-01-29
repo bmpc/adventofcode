@@ -4,8 +4,7 @@ use std::collections::{ HashSet, VecDeque };
 use std::hash::Hash;
 
 const INPUT_FILE: &str = "./input/21_input.txt";
-// const INPUT_FILE: &str = "./input/21_input_test.txt";
-// const INPUT_FILE: &str = "./input/21_input_test2.txt";
+//const INPUT_FILE: &str = "./input/21_input_test.txt";
 
 const STEPS_1: usize = 64;
 const STEPS_2: usize = 26501365;
@@ -54,11 +53,44 @@ fn neighbors(pos: (usize, usize), grid: &Grid) -> [Option<(usize, usize)>; 4] {
     ]
 }
 
-fn count_plots(steps: usize, grid: &Grid) ->  VecDeque<(usize, usize)> {
-    let start = grid.data.iter().position(|e| *e == 'S').unwrap();
-    let s_row = start / grid.width;
-    let s_col = start % grid.width;
+fn count_plots((s_row, s_col): (usize, usize), steps: usize, grid: &Grid) ->  HashSet<(usize, usize)> {
+    let mut queue: VecDeque<(usize, usize, usize)> = VecDeque::new();
+    queue.push_back((s_row, s_col, steps));
+
+    let mut seen = HashSet::new();
+    seen.insert((s_row, s_col));
     
+    let mut ans: HashSet<(usize, usize)> = HashSet::new();
+
+    while !queue.is_empty() {
+        let curr = queue.pop_front().unwrap();
+        let steps = curr.2;
+        let cn = (curr.0, curr.1);
+
+        if steps % 2 == 0 {
+            ans.insert(cn);
+        }
+
+        if steps == 0 {
+            continue;
+        }
+    
+        let neighbors = neighbors(cn, grid);
+        for n_op in neighbors {
+            if let Some(n) = n_op {
+                if !seen.contains(&n) {
+                    seen.insert(n);
+                    queue.push_back((n.0, n.1, steps - 1));
+                }
+            }
+        }
+    }
+
+    ans
+}
+
+/* slower solution */
+fn _count_plots2((s_row, s_col): (usize, usize), steps: usize, grid: &Grid) ->  VecDeque<(usize, usize)> {
     let mut queue: VecDeque<(usize, usize)> = VecDeque::new();
     queue.push_back((s_row, s_col));
 
@@ -88,7 +120,40 @@ fn count_plots(steps: usize, grid: &Grid) ->  VecDeque<(usize, usize)> {
     queue
 }
 
-fn _print_map(plots: &VecDeque<(usize, usize)>, grid: &Grid) {
+/* Shamefully borrowed from HyperNeutrino (https://www.youtube.com/watch?v=9UOMZSL0JTg) */
+fn infinite_plots((sr, sc): (usize, usize), steps: usize, grid: &Grid) -> usize {
+    let size = grid.width;
+    let grid_width = steps / size - 1;
+
+    let odd = (grid_width / 2 * 2 + 1).pow(2);
+    let even = ((grid_width + 1) / 2 * 2).pow(2);
+
+    let odd_points = count_plots((sr, sc), size * 2 + 1, grid).len();
+    let even_points = count_plots((sr, sc), size * 2, grid).len();
+
+    let corner_t = count_plots((size - 1, sc), size - 1, grid).len();
+    let corner_r = count_plots((sr, 0), size - 1, grid).len();
+    let corner_b = count_plots((0, sc), size - 1, grid).len();
+    let corner_l = count_plots((sr, size - 1), size - 1, grid).len();
+
+    let small_tr = count_plots((size - 1, 0), size / 2 - 1, grid).len();
+    let small_tl = count_plots((size - 1, size - 1), size / 2 - 1, grid).len();
+    let small_br = count_plots((0, 0), size / 2 - 1, grid).len();
+    let small_bl = count_plots((0, size - 1), size / 2 - 1, grid).len();
+
+    let large_tr = count_plots((size - 1, 0), size * 3 / 2 - 1, grid).len();
+    let large_tl = count_plots((size - 1, size - 1), size * 3 / 2 - 1, grid).len();
+    let large_br = count_plots((0, 0), size * 3 / 2 - 1, grid).len();
+    let large_bl = count_plots((0, size - 1), size * 3 / 2 - 1, grid).len();
+
+    odd * odd_points +
+    even * even_points +
+    corner_t + corner_r + corner_b + corner_l +
+    (grid_width + 1) * (small_tr + small_tl + small_br + small_bl) +
+    grid_width * (large_tr + large_tl + large_br + large_bl)
+}
+
+fn _print_map(plots: &HashSet<(usize, usize)>, grid: &Grid) {
     for row in 0..grid.height {
         for col in 0..grid.width {
             if plots.contains(&(row, col)) {
@@ -120,10 +185,16 @@ fn main() {
 
         let grid = Grid { width, height, data: data.as_slice() };
         
-        let plots = count_plots(STEPS_1, &grid);
-        //_print_map(&plots, &grid);
-        println!("[Part 1] Number of garden plots the Elf can reach in exactly 64 steps : {}", plots.len());
+        let start = grid.data.iter().position(|e| *e == 'S').unwrap();
+        let s_row = start / grid.width;
+        let s_col = start % grid.width;
 
+        let plots = count_plots((s_row, s_col), STEPS_1, &grid);
+        //_print_map(&plots, &grid);
+        println!("[Part 1] Number of garden plots the Elf can reach in exactly {} steps : {}", STEPS_1, plots.len());
+
+        let plots2 = infinite_plots((s_row, s_col), STEPS_2, &grid);
+        println!("[Part 2] Number of garden plots the Elf can reach in exactly {} steps : {}", STEPS_2, plots2);
     } else {
         eprintln!("Could not load the garden map from {}", INPUT_FILE);
     }

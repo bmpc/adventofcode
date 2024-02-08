@@ -88,6 +88,10 @@ path = "src/20_pulse_propagation.rs"
 name = "21_step_counter"
 path = "src/21_step_counter.rs"
 
+[[bin]]
+name = "22_sand_slabs"
+path = "src/22_sand_slabs.rs"
+
 regex = "1.10.2"
 pathfinding = "4.8.1"
 

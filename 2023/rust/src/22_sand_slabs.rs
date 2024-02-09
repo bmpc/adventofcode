@@ -1,12 +1,14 @@
 mod utils;
 
 use std::cmp::Ordering;
+use std::collections::{HashMap, HashSet};
 
-//const INPUT_FILE: &str = "./input/22_input.txt";
-const INPUT_FILE: &str = "./input/22_input_test.txt";
+const INPUT_FILE: &str = "./input/22_input.txt";
+// const INPUT_FILE: &str = "./input/22_input_test.txt";
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 struct Brick {
+    id: u32,
     begin: (u32, u32, u32),
     end: (u32, u32, u32)
 }
@@ -23,19 +25,35 @@ impl Ord for Brick {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Hash, Clone, Eq, PartialEq)]
 struct SettledBrick {
+    id: u32,
     begin: (u32, u32, u32),
     end: (u32, u32, u32),
-    s_bricks: Vec<SettledBrick> // bricks in which this block is settled
+    top: Vec<u32>,
+    bottom: Vec<u32>
+}
+
+// implement ordering based on z
+impl PartialOrd for SettledBrick {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        other.end.2.partial_cmp(&self.end.2)
+    }
+}
+impl Ord for SettledBrick {
+    fn cmp(&self, other: &Self) -> Ordering {
+        other.end.2.cmp(&self.end.2)
+    }
 }
 
 impl SettledBrick {
     fn new(b: &Brick) -> Self {
         Self {
+            id: b.id,
             begin: b.begin,
             end: b.end,
-            s_bricks: vec![]
+            top: vec![],
+            bottom: vec![]
         }
     }
 }
@@ -100,58 +118,36 @@ fn intersect(b: &Brick, sb: &SettledBrick) -> bool {
     return false; // Doesn't fall in any of the above cases 
 } 
 
-fn _intersect_bogus(b: &Brick, sb: &SettledBrick) -> bool {
-    let (x1, y1) = (b.begin.0 as i32, b.begin.1 as i32);
-    let (x2, y2) = (b.end.0 as i32, b.end.1 as i32);
-    let (x3, y3) = (sb.begin.0 as i32, sb.begin.1 as i32);
-    let (x4, y4) = (sb.end.0 as i32, sb.end.1 as i32);
-
-    let a1 = if x1 - x2 != 0 { (y1 - y2) / (x1 - x2) } else { 0 };  // check dividing by zero
-    let a2 = if x3 - x4 != 0 { (y3 - y4) / (x3 - x4) } else { 0 };  // check dividing by zero
-    let b1 = y1 - a1 * x1; // = y2-a1 * x2;
-    let b2 = y3 - a2 * x3; // = y4 - a2 * x4;
-
-    if a1 == a2 {
-        return false;
-    }
-
-    let xa = if a1 - a2 != 0 { (b2 - b1) / (a1 - a2) } else { 0 }; // check dividing by zero
-    
-    !(xa < x1.min(x2).max(x3.min(x4))) || (xa > x1.max(x2).min(x3.max(x4)))
-}
-
 fn settle_bricks(bricks: &Vec<Brick>) -> Vec<SettledBrick> {
-    let mut settled_bricks: Vec<SettledBrick> = vec![];
+    let mut settled_bricks: Vec<SettledBrick> = Vec::new();
 
     for brick in bricks {
         let mut z = 0;
-        let mut s_bricks = vec![];
-        for sb in settled_bricks.iter().rev() {
+        let mut bottom_bricks = vec![];
+
+        for sb in settled_bricks.iter_mut() {
             if z != 0 && sb.end.2 != z {
                 // exhausted all blocks at the intersect level
                 break;
             }
-            let intersec = brick.begin.2 > sb.begin.2 && intersect(&brick, sb);
+            let intersec = brick.begin.2 > sb.end.2 && intersect(&brick, &sb); 
             if intersec {
+                sb.top.push(brick.id);
                 z = sb.end.2;
-                s_bricks.push(sb.clone());
-            } else {
-                println!("debug");
+                bottom_bricks.push(sb.id);
             }
         }
 
-        if !s_bricks.is_empty() {
+        if !bottom_bricks.is_empty() {
             let mut b = *brick;
             b.end.2 = b.end.2 - b.begin.2 + z + 1;
             b.begin.2 = z + 1;
-            let mut sb = SettledBrick::new(&b);
-            sb.s_bricks = s_bricks;
+            let mut nsb = SettledBrick::new(&b);
+            nsb.bottom = bottom_bricks;
 
-            println!("s_bricks_len: {}", sb.s_bricks.len());
-            
-            settled_bricks.push(sb);
+            settled_bricks.push(nsb);
         } else {
-            // the block is in the ground
+            // the brick is in the ground
             let mut nb = *brick;
             if !(nb.begin.2 == 1 || nb.end.2 == 1) {
                 if nb.begin.2 == nb.end.2 {
@@ -164,22 +160,82 @@ fn settle_bricks(bricks: &Vec<Brick>) -> Vec<SettledBrick> {
             }
             settled_bricks.push(SettledBrick::new(&nb));
         }
+
+        settled_bricks.sort();
     }
 
     settled_bricks
 }
 
-fn disintegrable_bricks(bricks: &Vec<SettledBrick>) -> u32 {
-    bricks.iter().fold(0, |sum, b| match b.s_bricks.len() {
-        0 => sum + 1,
-        ln if ln > 1 => ln as u32 + sum,
-        _ => sum
-    })
+fn disintegrable_bricks(bricks: &Vec<SettledBrick>) -> HashMap<u32, &SettledBrick> {
+    let bricks_map: HashMap<u32, SettledBrick> = bricks.into_iter().map(|b| (b.id, b.clone())).collect();
+
+    let mut disintegrable_bricks_map = HashMap::new();
+
+    for b in bricks {
+        match b.top.len() {
+            ln if ln > 1 => {
+                let can_disintegrate = b.top.iter().map(|tid| bricks_map.get(tid).unwrap()).all(|bt| bt.bottom.len() > 1);
+                if can_disintegrate {
+                    disintegrable_bricks_map.insert(b.id, b);
+                }
+            },
+            1 => {
+                let tb = bricks_map.get(b.top.get(0).unwrap()).unwrap();
+                if tb.bottom.len() > 1 {
+                    disintegrable_bricks_map.insert(b.id, b);
+                }
+            },
+            _ => { // zero
+                disintegrable_bricks_map.insert(b.id, b);
+             }
+        };
+    }
+
+    disintegrable_bricks_map
+}
+
+fn count_fall_bricks(
+    sb: &SettledBrick, 
+    bricks_map: &HashMap<u32, SettledBrick>,
+    fall: &mut HashSet<u32>) {
+
+    for tsbid in &sb.top {
+        let tsb = bricks_map.get(tsbid).unwrap();
+        if tsb.bottom.len() > 1 {
+            // if a top brick is being hold by other bricks, we need to check if these will also fall
+            if tsb.bottom.iter().filter(|sbid| *sbid != tsbid).all(|id| fall.contains(id)) {
+                fall.insert(tsb.id);
+                count_fall_bricks(tsb, bricks_map, fall);
+            }
+        } else {
+            fall.insert(tsb.id);
+            count_fall_bricks(tsb, bricks_map, fall);
+        }
+    }
+}
+
+fn sum_fall_bricks(bricks: &Vec<SettledBrick>, disintegrable_bricks: &HashMap<u32, &SettledBrick>) -> usize {
+    let mut sum :usize = 0;
+
+    let bricks_map: HashMap<u32, SettledBrick> = bricks.into_iter().map(|b| (b.id, b.clone())).collect();
+    
+    for sb in bricks {
+        if !disintegrable_bricks.contains_key(&sb.id) {
+            let mut fall = HashSet::new();
+            count_fall_bricks(sb, &bricks_map, &mut fall);
+            sum += fall.len();
+        }
+    }
+
+    sum
 }
 
 fn main() {
     if let Ok(lines) = utils::read_lines(INPUT_FILE) {
         let mut bricks: Vec<Brick> = vec![];
+
+        let mut brick_id = 0;
 
         for line in lines {
             if let Ok(text) = line {
@@ -197,7 +253,8 @@ fn main() {
                 let y2: u32 = pe.next().unwrap().parse().unwrap();
                 let z2: u32 = pe.next().unwrap().parse().unwrap();
 
-                bricks.push(Brick {begin: (x1, y1, z1), end: (x2, y2, z2)});
+                bricks.push(Brick {id: brick_id, begin: (x1, y1, z1), end: (x2, y2, z2)});
+                brick_id += 1;
             }
         }
 
@@ -205,9 +262,13 @@ fn main() {
 
         let settled_bricks = settle_bricks(&bricks);
      
-        let sum1 = disintegrable_bricks(&settled_bricks);
+        let disintegrable_bricks = disintegrable_bricks(&settled_bricks);
 
-        println!("[Part 1] Number of bricks that can be safely disintegrated : {}", sum1);
+        println!("[Part 1] Number of bricks that can be safely disintegrated : {}", disintegrable_bricks.len());
+
+        let sum2 = sum_fall_bricks(&settled_bricks, &disintegrable_bricks);
+
+        println!("[Part 2] Sum of the number of other bricks that would fall for each disintegrated brick : {}", sum2);
     } else {
         eprintln!("Could not the snapshot of bricks while falling from {}", INPUT_FILE);
     }

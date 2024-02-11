@@ -92,6 +92,13 @@ path = "src/21_step_counter.rs"
 name = "22_sand_slabs"
 path = "src/22_sand_slabs.rs"
 
+[[bin]]
+name = "23_a_long_walk"
+path = "src/23_a_long_walk.rs"
+
 regex = "1.10.2"
 pathfinding = "4.8.1"
+
+[dependencies]
+indexmap = "2.2.2"
 

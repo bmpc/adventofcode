@@ -96,6 +96,10 @@ path = "src/22_sand_slabs.rs"
 name = "23_a_long_walk"
 path = "src/23_a_long_walk.rs"
 
+[[bin]]
+name = "24_never_tell_me_the_odds"
+path = "src/24_never_tell_me_the_odds.rs"
+
 regex = "1.10.2"
 pathfinding = "4.8.1"
 

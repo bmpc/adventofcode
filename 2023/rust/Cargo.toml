@@ -105,4 +105,5 @@ pathfinding = "4.8.1"
 
 [dependencies]
 indexmap = "2.2.2"
+nalgebra = "0.32.4"
 

@@ -1,4 +1,5 @@
 mod utils;
+use nalgebra::{Vector6, Matrix6};
 
 const INPUT_FILE: &str = "./input/24_input.txt"; const TEST_AREA: (u64, u64) = (200000000000000, 400000000000000);
 //const INPUT_FILE: &str = "./input/24_input_test.txt"; const TEST_AREA: (u64, u64) = (7, 27);
@@ -6,25 +7,25 @@ const INPUT_FILE: &str = "./input/24_input.txt"; const TEST_AREA: (u64, u64) = (
 #[derive(Debug)]
 struct Hailstone {
     _id: u32,
-    x: i64,
-    y: i64,
-    _z: i64,
-    vx: i64,
-    vy: i64,
-    _vz: i64,
+    x: f64,
+    y: f64,
+    z: f64,
+    vx: f64,
+    vy: f64,
+    vz: f64,
     m: f64,
     c: f64
 }
 
 impl Hailstone {
-    fn new(id: u32, x: i64, y: i64, z: i64, vx: i64, vy: i64, vz: i64) -> Self {
-        let p1 = (x as f64, y as f64);
-        let p2 = ((x + vx) as f64, (y + vy) as f64);
+    fn new(id: u32, x: f64, y: f64, z: f64, vx: f64, vy: f64, vz: f64) -> Self {
+        let p1 = (x, y);
+        let p2 = ((x + vx), (y + vy));
 
         let m: f64 = (p2.1 - p1.1) / (p2.0 - p1.0);
         let c: f64 = p1.1 - m * p1.0;
 
-        Self { _id: id, x, y, _z: z, vx, vy, _vz: vz, m, c }
+        Self { _id: id, x, y, z: z, vx, vy, vz: vz, m, c }
     }
 
     fn intersect(self: &Self, other: &Self) -> Option<(f64, f64)> {
@@ -52,10 +53,10 @@ fn count_intersections(test_area: (u64, u64), hailstones: &Vec<Hailstone>) -> us
                     if x.floor() as u64 >= test_area.0 && y.floor() as u64 >= test_area.0 &&
                         x.ceil() as u64 <= test_area.1 && y.ceil() as u64 <= test_area.1 && 
                         // check if hailstones will intersect only in the future
-                        (x - hs.x as f64) * hs.vx as f64 >= 0.0 && 
-                        (y - hs.y as f64) * hs.vy as f64 >= 0.0 && 
-                        (x - ihs.x as f64) * ihs.vx as f64 >= 0.0 && 
-                        (y - ihs.y as f64) * ihs.vy as f64 >= 0.0 {
+                        (x - hs.x) * hs.vx >= 0.0 && 
+                        (y - hs.y) * hs.vy >= 0.0 && 
+                        (x - ihs.x) * ihs.vx >= 0.0 && 
+                        (y - ihs.y) * ihs.vy >= 0.0 {
                         count += 1;
                     }
                 }
@@ -64,6 +65,36 @@ fn count_intersections(test_area: (u64, u64), hailstones: &Vec<Hailstone>) -> us
     }
 
     count
+}
+
+fn calculate_rock_position(hailstones: &Vec<Hailstone>) -> (f64, f64, f64) {
+    // considering only the first 3 hailstones
+    let h0 = &hailstones[0];
+    let h1 = &hailstones[1];
+    let h2 = &hailstones[2];
+   
+    let matrix = Matrix6::new(
+        0.0, h0.vz - h1.vz, h1.vy - h0.vy, 0.0, h1.z - h0.z, h0.y - h1.y,
+		h1.vz - h0.vz, 0.0, h0.vx - h1.vx, h0.z - h1.z, 0.0, h1.x - h0.x,
+		h0.vy - h1.vy, h1.vx - h0.vx, 0.0, h1.y - h0.y, h0.x - h1.x, 0.0,
+		0.0, h0.vz - h2.vz, h2.vy - h0.vy, 0.0, h2.z - h0.z, h0.y - h2.y,
+		h2.vz - h0.vz, 0.0, h0.vx - h2.vx, h0.z - h2.z, 0.0, h2.x - h0.x,
+		h0.vy - h2.vy, h2.vx - h0.vx, 0.0, h2.y - h0.y, h0.x - h2.x, 0.0,
+    );
+
+    let eqs = Vector6::new(
+        h0.y*h0.vz - h0.vy*h0.z - (h1.y*h1.vz - h1.vy*h1.z),
+		h0.z*h0.vx - h0.vz*h0.x - (h1.z*h1.vx - h1.vz*h1.x),
+		h0.x*h0.vy - h0.vx*h0.y - (h1.x*h1.vy - h1.vx*h1.y),
+		h0.y*h0.vz - h0.vy*h0.z - (h2.y*h2.vz - h2.vy*h2.z),
+		h0.z*h0.vx - h0.vz*h0.x - (h2.z*h2.vx - h2.vz*h2.x),
+		h0.x*h0.vy - h0.vx*h0.y - (h2.x*h2.vy - h2.vx*h2.y),
+    );
+
+    let decomp = matrix.lu();
+    let res = decomp.solve(&eqs).expect("Linear resolution failed.");
+
+    (res[0], res[1], res[2])
 }
 
 fn main() {
@@ -79,14 +110,14 @@ fn main() {
                 let velocity = parts.next().unwrap();
 
                 let mut p = position.split(",");
-                let x: i64 = p.next().unwrap().trim().parse().unwrap();
-                let y: i64 = p.next().unwrap().trim().parse().unwrap();
-                let z: i64 = p.next().unwrap().trim().parse().unwrap();
+                let x: f64 = p.next().unwrap().trim().parse().unwrap();
+                let y: f64 = p.next().unwrap().trim().parse().unwrap();
+                let z: f64 = p.next().unwrap().trim().parse().unwrap();
 
                 let mut v = velocity.split(",");
-                let vx: i64 = v.next().unwrap().trim().parse().unwrap();
-                let vy: i64 = v.next().unwrap().trim().parse().unwrap();
-                let vz: i64 = v.next().unwrap().trim().parse().unwrap();
+                let vx: f64 = v.next().unwrap().trim().parse().unwrap();
+                let vy: f64 = v.next().unwrap().trim().parse().unwrap();
+                let vz: f64 = v.next().unwrap().trim().parse().unwrap();
 
                 hailstones.push(Hailstone::new(hailstone_id, x, y, z, vx, vy, vz));
                 hailstone_id += 1;
@@ -96,6 +127,10 @@ fn main() {
         let intersections = count_intersections(TEST_AREA, &hailstones);
 
         println!("[Part 1] Number of intersections that occur within the test area : {}", intersections);
+
+        let rock = calculate_rock_position(&hailstones);
+
+        println!("[Part 2] Sum of X, Y, and Z coordinates of the initial rock position: {}", (rock.0 + rock.1 + rock.2).floor());
         
     } else {
         eprintln!("Could not the hailstones from {}", INPUT_FILE);

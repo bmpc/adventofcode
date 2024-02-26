@@ -1,6 +1,6 @@
 # Advent of Code
 
-Complete [Advent of Code](https://adventofcode.com/) challenge, written in *beginner* [Rust](https://www.rust-lang.org/).
+[2023 solutions](2023/rust/) of [Advent of Code](https://adventofcode.com/2023) challenge, written in *beginner* [Rust](https://www.rust-lang.org/).
 
 
                          ...'''''''''...               

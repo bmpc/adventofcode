@@ -41,25 +41,20 @@ fn solution(allocator: std.mem.Allocator, input: []const u8) !Tuple {
         try list_b.append(b);
     }
 
-    const slice_a = try list_a.toOwnedSlice();
-    defer allocator.free(slice_a);
-    const slice_b = try list_b.toOwnedSlice();
-    defer allocator.free(slice_b);
+    std.mem.sort(i32, list_a.items, {}, std.sort.asc(i32));
+    std.mem.sort(i32, list_b.items, {}, std.sort.asc(i32));
 
-    std.mem.sort(i32, slice_a, {}, std.sort.asc(i32));
-    std.mem.sort(i32, slice_b, {}, std.sort.asc(i32));
-
-    const count = slice_a.len;
+    const count = list_a.items.len;
 
     var total1: u32 = 0;
     for (0..count) |idx| {
-        total1 += @abs(slice_a[idx] - slice_b[idx]);
+        total1 += @abs(list_a.items[idx] - list_b.items[idx]);
     }
 
     var total2: u32 = 0;
-    for (slice_a) |a| {
+    for (list_a.items) |a| {
         var v_count: i32 = 0;
-        for (slice_b) |b| {
+        for (list_b.items) |b| {
             if (a == b) {
                 v_count += 1;
             } else if (v_count > 0) {

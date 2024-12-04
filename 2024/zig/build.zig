@@ -15,8 +15,8 @@ pub fn build(b: *std.Build) void {
     // set a preferred release mode, allowing the user to decide how to optimize.
     const optimize = b.standardOptimizeOption(.{});
 
-    buildExe(b, target, optimize, "main", "src/main.zig");
     buildExe(b, target, optimize, "01_historian_hysteria", "src/01_historian_hysteria.zig");
+    buildExe(b, target, optimize, "02_rednosed_reports", "src/02_rednosed_reports.zig");
 }
 
 fn buildExe(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode, comptime name: []const u8, comptime src_file_path: []const u8) void {

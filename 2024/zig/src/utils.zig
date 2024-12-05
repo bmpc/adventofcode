@@ -14,3 +14,12 @@ pub fn readFile(allocator: *const std.mem.Allocator, file_path: []const u8) ![]u
     const buff = try file.readToEndAlloc(allocator.*, stat.size);
     return buff;
 }
+
+pub fn inSlice(comptime T: type, haystack: []const T, needle: T) bool {
+    for (haystack) |thing| {
+        if (thing == needle) {
+            return true;
+        }
+    }
+    return false;
+}

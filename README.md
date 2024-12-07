@@ -2,6 +2,8 @@
 
 [2023 solutions](2023/rust/) of [Advent of Code](https://adventofcode.com/2023) challenge, written in *beginner* [Rust](https://www.rust-lang.org/).
 
+[2024 solutions](2024/zig/)  of [Advent of Code](https://adventofcode.com/2024) challenge, written in *beginner* [Zig](https://ziglang.org/). [WIP] :construction_worker:
+
 
                          ...'''''''''...               
                       .'' ~/\* ~~~~  /\ ''.            

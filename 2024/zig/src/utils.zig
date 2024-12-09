@@ -4,6 +4,10 @@ const assert = std.debug.assert;
 
 pub const BoundsError = error{OutOfBounds};
 
+pub fn intToString(int: u32, buf: []u8) ![]const u8 {
+    return try std.fmt.bufPrint(buf, "{}", .{int});
+}
+
 pub fn Matrix(comptime T: type) type {
     return struct {
         data: []T = undefined,
@@ -75,12 +79,6 @@ pub fn Matrix(comptime T: type) type {
             }
         }
     };
-}
-
-pub fn concatAndReturnBuffer(allocator: *std.mem.Allocator, one: []const u8, two: []const u8) !std.Buffer {
-    var b = try std.Buffer.init(allocator, one);
-    try b.append(two);
-    return b;
 }
 
 pub fn readFile(allocator: *const std.mem.Allocator, file_path: []const u8) ![]u8 {

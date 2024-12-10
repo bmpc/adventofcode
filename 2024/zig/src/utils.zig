@@ -2,10 +2,28 @@ const std = @import("std");
 
 const assert = std.debug.assert;
 
-pub const BoundsError = error{OutOfBounds};
+pub const Error = error{ OutOfBounds, Unsupported };
 
 pub fn intToString(int: u32, buf: []u8) ![]const u8 {
     return try std.fmt.bufPrint(buf, "{}", .{int});
+}
+
+pub fn concatNumbers(int1: anytype, int2: anytype, buf: []u8) !@TypeOf(int1) {
+    const str = try std.fmt.bufPrint(buf, "{}{}", .{ int1, int2 });
+    return try std.fmt.parseInt(@TypeOf(int1), str, 10);
+}
+
+pub fn concatNumbersStatic(int1: anytype, int2: anytype) Error!@TypeOf(int1) {
+    var factor: @TypeOf(int1) = 0;
+    switch (int2) {
+        0...9 => factor = 10,
+        10...99 => factor = 100,
+        100...999 => factor = 1000,
+        1000...9999 => factor = 10000,
+        else => return Error.Unsupported,
+    }
+
+    return (int1 * factor) + int2;
 }
 
 pub fn Matrix(comptime T: type) type {
@@ -47,23 +65,23 @@ pub fn Matrix(comptime T: type) type {
             self.allocator.free(self.data);
         }
 
-        pub fn set(self: *Self, row: usize, col: usize, value: T) BoundsError!void {
+        pub fn set(self: *Self, row: usize, col: usize, value: T) Error!void {
             if (row > self.height - 1 or col > self.width - 1) {
-                return BoundsError.OutOfBounds;
+                return Error.OutOfBounds;
             }
             self.data[row * self.width + col] = value;
         }
 
-        pub fn get(self: *Self, row: usize, col: usize) BoundsError!T {
+        pub fn get(self: *Self, row: usize, col: usize) Error!T {
             if (row > self.height - 1 or col > self.width - 1) {
-                return BoundsError.OutOfBounds;
+                return Error.OutOfBounds;
             }
             return self.data[row * self.width + col];
         }
 
-        pub fn getSlice(self: *Self, row: usize, col: usize, size: usize) BoundsError![]const T {
+        pub fn getSlice(self: *Self, row: usize, col: usize, size: usize) Error![]const T {
             if (row > self.height - 1 or col > self.width - 1 or (row * self.width + col + size > self.data.len)) {
-                return BoundsError.OutOfBounds;
+                return Error.OutOfBounds;
             }
             const idx = row * self.width + col;
             return self.data[idx..(idx + size)];

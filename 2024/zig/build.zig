@@ -24,6 +24,7 @@ pub fn build(b: *std.Build) void {
     buildExe(b, target, optimize, "07_bridge_repair", "src/07_bridge_repair.zig");
     buildExe(b, target, optimize, "08_resonant_collinearity", "src/08_resonant_collinearity.zig");
     buildExe(b, target, optimize, "09_disk_fragmenter", "src/09_disk_fragmenter.zig");
+    buildExe(b, target, optimize, "10_hoof_it", "src/10_hoof_it.zig");
 }
 
 fn buildExe(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode, comptime name: []const u8, comptime src_file_path: []const u8) void {

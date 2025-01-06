@@ -110,7 +110,7 @@ pub fn readFile(allocator: *const std.mem.Allocator, file_path: []const u8) ![]u
 
 pub fn inSlice(comptime T: type, haystack: []const T, needle: T) bool {
     for (haystack) |thing| {
-        if (thing == needle) {
+        if (std.meta.eql(thing, needle)) {
             return true;
         }
     }

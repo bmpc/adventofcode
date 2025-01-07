@@ -40,6 +40,16 @@ pub fn Matrix(comptime T: type) type {
             return .{ .width = width, .height = height, .data = data, .allocator = allocator };
         }
 
+        pub fn initWithElem(width: u32, height: u32, base: T, allocator: std.mem.Allocator) Self {
+            const data = allocator.alloc(T, width * height) catch unreachable;
+
+            for (0..width * height) |i| {
+                data[i] = base;
+            }
+
+            return .{ .width = width, .height = height, .data = data, .allocator = allocator };
+        }
+
         pub fn initFromSequence(seq: []const T, delimiter: []const u8, allocator: std.mem.Allocator) !Self {
             var rows = std.mem.split(T, seq, delimiter);
             var list = std.ArrayList(T).init(allocator);
@@ -94,6 +104,12 @@ pub fn Matrix(comptime T: type) type {
                     std.debug.print("{c} ", .{ch});
                 }
                 std.debug.print("\n", .{});
+            }
+        }
+
+        pub fn clear(self: *Self, base: T) void {
+            for (0..self.width * self.height) |i| {
+                self.data[i] = base;
             }
         }
     };

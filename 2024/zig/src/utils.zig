@@ -71,6 +71,13 @@ pub fn Matrix(comptime T: type) type {
             return .{ .width = width, .height = height, .data = data, .allocator = allocator };
         }
 
+        pub fn clone(self: *Self, allocator: std.mem.Allocator) !Self {
+            var dest = try std.ArrayList(T).initCapacity(allocator, self.data.len);
+            try dest.appendSlice(self.data);
+            std.mem.copyForwards(T, dest.items, self.data);
+            return .{ .width = self.width, .height = self.height, .data = try dest.toOwnedSlice(), .allocator = allocator };
+        }
+
         pub fn deinit(self: *Self) void {
             self.allocator.free(self.data);
         }
@@ -101,7 +108,7 @@ pub fn Matrix(comptime T: type) type {
             for (0..self.height) |row| {
                 for (0..self.width) |col| {
                     const ch = self.get(row, col) catch unreachable;
-                    std.debug.print("{c} ", .{ch});
+                    std.debug.print("{c}", .{ch});
                 }
                 std.debug.print("\n", .{});
             }

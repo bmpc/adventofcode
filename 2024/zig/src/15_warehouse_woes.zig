@@ -39,6 +39,8 @@ fn solution(allocator: std.mem.Allocator, input: []const u8) !Tuple {
 
     var map = try utils.Matrix(u8).initFromSequence(parts_it.next().?, "\n", allocator);
     defer map.deinit();
+    var map2 = try map.clone(allocator);
+    defer map2.deinit();
 
     var directions = std.ArrayList(Direction).init(allocator);
     defer directions.deinit();
@@ -62,17 +64,17 @@ fn solution(allocator: std.mem.Allocator, input: []const u8) !Tuple {
     const total1 = try get_boxes_coordinates_sum(&map);
 
     // part 2
-    var expanded_map = try expand_map(&map, allocator);
+    var expanded_map = try expand_map(&map2, allocator);
     defer expanded_map.deinit();
 
-    expanded_map.print();
+    curr = try find_start(&expanded_map);
 
-    // for (directions.items) |dir| {
-    //     curr = try move_expanded(&map, curr, dir);
-    // }
-    // const total2 = try get_boxes_coordinates_sum(&map);
+    for (directions.items) |dir| {
+        curr = try move_expanded(&expanded_map, curr, dir);
+    }
+    const total2 = try get_boxes_coordinates_sum(&expanded_map);
 
-    return .{ total1, 0 };
+    return .{ total1, total2 };
 }
 
 fn move(map: *utils.Matrix(u8), pos: Vec2, dir: Direction) !Vec2 {
@@ -102,7 +104,69 @@ fn move(map: *utils.Matrix(u8), pos: Vec2, dir: Direction) !Vec2 {
     return pos;
 }
 
-//fn move_expanded(map: *utils.Matrix(u8), pos: Vec2, dir: Direction) !Vec2 {}
+fn move_expanded(map: *utils.Matrix(u8), pos: Vec2, dir: Direction) !Vec2 {
+    if (try can_move(map, pos, dir)) {
+        var np = pos;
+        np.step(dir);
+        try do_move_expanded(map, np, '@', dir);
+        try map.set(pos.y, pos.x, '.');
+        return np;
+    } else {
+        return pos;
+    }
+}
+
+fn can_move(map: *utils.Matrix(u8), pos: Vec2, dir: Direction) !bool {
+    var np = pos;
+    np.step(dir);
+
+    const v = try map.get(np.y, np.x);
+    return switch (v) {
+        '#' => false,
+        '.' => true,
+        '[' => {
+            if (dir == Direction.DOWN or dir == Direction.UP) {
+                return try can_move(map, np, dir) and try can_move(map, Vec2{ .x = np.x + 1, .y = np.y }, dir);
+            } else {
+                return try can_move(map, np, dir);
+            }
+        },
+        ']' => {
+            if (dir == Direction.DOWN or dir == Direction.UP) {
+                return try can_move(map, np, dir) and try can_move(map, Vec2{ .x = np.x - 1, .y = np.y }, dir);
+            } else {
+                return try can_move(map, np, dir);
+            }
+        },
+        else => unreachable,
+    };
+}
+
+fn do_move_expanded(map: *utils.Matrix(u8), pos: Vec2, vp: u8, dir: Direction) !void {
+    const v = try map.get(pos.y, pos.x);
+    try map.set(pos.y, pos.x, vp);
+
+    var np = pos;
+    np.step(dir);
+
+    switch (v) {
+        '[' => {
+            try do_move_expanded(map, np, v, dir);
+            if (dir == Direction.DOWN or dir == Direction.UP) {
+                try map.set(pos.y, pos.x + 1, '.');
+                try do_move_expanded(map, Vec2{ .x = np.x + 1, .y = np.y }, ']', dir);
+            }
+        },
+        ']' => {
+            try do_move_expanded(map, np, v, dir);
+            if (dir == Direction.DOWN or dir == Direction.UP) {
+                try map.set(pos.y, pos.x - 1, '.');
+                try do_move_expanded(map, Vec2{ .x = np.x - 1, .y = np.y }, '[', dir);
+            }
+        },
+        else => {},
+    }
+}
 
 fn get_boxes_coordinates_sum(map: *utils.Matrix(u8)) !u32 {
     var sum: usize = 0;
@@ -174,4 +238,10 @@ test "example 2" {
 
     try std.testing.expectEqual(@as(u32, 10092), result[0]);
     try std.testing.expectEqual(@as(u32, 9021), result[1]);
+}
+
+test "example 3" {
+    const result = try solution(std.testing.allocator, "input/15_input_test3.txt");
+
+    try std.testing.expectEqual(@as(u32, 618), result[1]);
 }

@@ -16,76 +16,31 @@ const Vec2 = struct {
             Direction.RIGHT => self.x = self.x + 1,
         }
     }
+
+    pub fn eql(self: @This(), other: @This()) bool {
+        return self.x == other.x and self.y == other.y;
+    }
 };
 
-const Node = struct { tile: u8, pos: Vec2, dir: Direction, w: u32 };
+const Node = struct {
+    tile: u8,
+    pos: Vec2,
+    dir: Direction,
+    w: u32,
+    parent: ?*Node,
 
-const PriorityQueue = std.PriorityQueue(Node, void, compare);
+    fn print(self: Node) void {
+        std.debug.print("({},{}) = {}\n", .{ self.pos.y, self.pos.x, self.w });
+    }
+};
 
-fn compare(_: void, a: Node, b: Node) std.math.Order {
+const PriorityQueue = std.PriorityQueue(*Node, void, compare);
+
+fn compare(_: void, a: *Node, b: *Node) std.math.Order {
     return std.math.order(a.w, b.w);
 }
 
 const Direction = enum(u8) { UP, DOWN, LEFT, RIGHT };
-
-const Move = std.meta.Tuple(&.{ Direction, Vec2 });
-const MoveDirections = struct {
-    left: ?Vec2,
-    right: ?Vec2,
-    up: ?Vec2,
-    down: ?Vec2,
-
-    fn set(self: *MoveDirections, dir: Direction, pos: Vec2) void {
-        switch (dir) {
-            Direction.LEFT => {
-                self.left = pos;
-            },
-            Direction.RIGHT => {
-                self.right = pos;
-            },
-            Direction.UP => {
-                self.up = pos;
-            },
-            Direction.DOWN => {
-                self.down = pos;
-            },
-        }
-    }
-
-    fn getSingle(self: MoveDirections) ?Move {
-        if (self.left) |left| {
-            return .{ Direction.LEFT, left };
-        }
-        if (self.right) |right| {
-            return .{ Direction.RIGHT, right };
-        }
-        if (self.up) |up| {
-            return .{ Direction.UP, up };
-        }
-        if (self.down) |down| {
-            return .{ Direction.DOWN, down };
-        }
-
-        return null;
-    }
-
-    fn count(self: MoveDirections) u32 {
-        var c: u32 = 0;
-        if (self.left != null) {
-            c += 1;
-        }
-        if (self.right != null) {
-            c += 1;
-        }
-        if (self.up != null) {
-            c += 1;
-        }
-        if (self.down != null) {
-            c += 1;
-        }
-        return c;
-    }
-};
 
 fn getDirsFrom(dir: Direction) [3]Direction {
     return switch (dir) {
@@ -97,9 +52,11 @@ fn getDirsFrom(dir: Direction) [3]Direction {
 }
 
 pub fn main() !void {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    const allocator = arena.allocator();
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer {
+        _ = gpa.deinit();
+    }
+    const allocator = gpa.allocator();
 
     const result = try solution(allocator, "input/16_input.txt");
 
@@ -114,127 +71,95 @@ fn solution(allocator: std.mem.Allocator, input: []const u8) !Tuple {
     var map = try utils.Matrix(u8).initFromSequence(data, "\n", allocator);
     defer map.deinit();
 
-    // part 1
     const pos = try findStart(&map);
-    const total1 = (try lowestScore(&map, pos, Direction.RIGHT, allocator)).?;
+    const result = (try lowestScore(&map, pos, Direction.RIGHT, allocator));
 
-    // TODO: part 2
-
-    return .{ total1, 0 };
+    return result;
 }
 
 // using Dijkstra's
-fn lowestScore(map: *utils.Matrix(u8), pos: Vec2, dir: Direction, allocator: std.mem.Allocator) !?u32 {
+fn lowestScore(map: *utils.Matrix(u8), pos: Vec2, dir: Direction, allocator: std.mem.Allocator) !Tuple {
     var pq = PriorityQueue.init(allocator, {});
     defer pq.deinit();
 
-    var visited = std.AutoHashMap(Vec2, bool).init(allocator);
+    var visited = std.AutoHashMap(Vec2, *Node).init(allocator);
     defer visited.deinit();
 
-    try pq.add(.{ .pos = pos, .w = 0, .dir = dir, .tile = 'S' });
+    var node_arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer node_arena.deinit();
+    const arena_allocator = node_arena.allocator();
+
+    const sn = try arena_allocator.create(Node);
+    sn.* = .{ .pos = pos, .w = 0, .dir = dir, .tile = 'S', .parent = null };
+    try pq.add(sn);
+
+    var found_e = false;
+    var w: u32 = 0;
+
+    var node_map = std.AutoHashMap(Vec2, bool).init(allocator);
+    defer node_map.deinit();
 
     while (pq.removeOrNull()) |n| {
-        try visited.put(n.pos, true);
+        if (found_e and n.w > w) continue;
 
         const tile = try map.get(n.pos.y, n.pos.x);
         if (tile == 'E') {
-            return n.w;
+            found_e = true;
+            w = n.w;
+
+            var nn = n;
+            try node_map.put(nn.pos, true);
+            while (nn.parent) |pn| {
+                try node_map.put(pn.pos, true);
+                nn = pn;
+            }
         }
-        const nodes = try getNeighbors(map, n);
-        if (nodes != null) {
-            for (nodes.?) |nn| {
-                if (nn.pos.x != 0 and nn.pos.y != 0 and !visited.contains(nn.pos)) {
-                    try pq.add(nn);
+
+        try visited.put(n.pos, n);
+        const nodes = try getNeighbors(map, n, arena_allocator);
+        for (nodes) |nn| {
+            if (nn != null) {
+                if (visited.get(nn.?.pos)) |vn| {
+                    if (vn.parent != null and nn.?.parent != null) {
+                        if (vn.parent.?.pos.eql(nn.?.parent.?.pos)) {
+                            continue;
+                        }
+                    }
                 }
+                try pq.add(nn.?);
             }
         }
     }
 
-    return null;
+    return .{ w, node_map.count() };
 }
 
-fn getNeighbors(map: *utils.Matrix(u8), node: Node) !?[3]Node {
-    var neighbors = std.mem.zeroes([3]Node);
+fn getNeighbors(map: *utils.Matrix(u8), node: *Node, allocator: std.mem.Allocator) ![3]?*Node {
+    var neighbors = std.mem.zeroes([3]?*Node);
     var idx: usize = 0;
 
-    var w = node.w;
-    var dir = node.dir;
-    var dirs = try getPossibleDirs(map, node.pos, node.dir);
-    while (dirs.count() == 1) {
-        const m = dirs.getSingle().?;
-        if (dir == m[0]) {
-            w += 1;
-        } else {
-            w += 1001;
-            dir = m[0];
-        }
-
-        const tile = try map.get(m[1].y, m[1].x);
-
-        if (tile == 'E') {
-            neighbors[idx] = Node{ .tile = tile, .pos = m[1], .dir = m[0], .w = w };
-            return neighbors;
-        }
-        dirs = try getPossibleDirs(map, m[1], m[0]);
-    }
-
-    if (dirs.count() > 1) {
-        // found a branch
-
-        if (dirs.left) |p| {
-            const tile = try map.get(p.y, p.x);
-            var nw = w;
-            if (dir == Direction.LEFT) nw += 1 else nw += 1001;
-
-            neighbors[idx] = .{ .tile = tile, .pos = p, .dir = Direction.LEFT, .w = nw };
-            idx += 1;
-        }
-        if (dirs.right) |p| {
-            const tile = try map.get(p.y, p.x);
-            var nw = w;
-            if (dir == Direction.RIGHT) nw += 1 else nw += 1001;
-
-            neighbors[idx] = .{ .tile = tile, .pos = p, .dir = Direction.RIGHT, .w = nw };
-            idx += 1;
-        }
-        if (dirs.up) |p| {
-            const tile = try map.get(p.y, p.x);
-            var nw = w;
-            if (dir == Direction.UP) nw += 1 else nw += 1001;
-
-            neighbors[idx] = .{ .tile = tile, .pos = p, .dir = Direction.UP, .w = nw };
-            idx += 1;
-        }
-        if (dirs.down) |p| {
-            const tile = try map.get(p.y, p.x);
-            var nw = w;
-            if (dir == Direction.DOWN) nw += 1 else nw += 1001;
-
-            neighbors[idx] = .{ .tile = tile, .pos = p, .dir = Direction.DOWN, .w = nw };
-            idx += 1;
-        }
-
-        return neighbors;
-    } else {
-        // dead end
-        return null;
-    }
-}
-
-fn getPossibleDirs(map: *utils.Matrix(u8), pos: Vec2, dir: Direction) !MoveDirections {
-    var res = std.mem.zeroes(MoveDirections);
-
-    const all_dirs = getDirsFrom(dir);
+    const all_dirs = getDirsFrom(node.dir);
     for (all_dirs) |d| {
-        var np = pos;
+        var w = node.w;
+        var np = node.pos;
         np.step(d);
         const tile = try map.get(np.y, np.x);
         if (tile != '#') {
-            res.set(d, np);
+            if (node.dir == d) {
+                w += 1;
+            } else {
+                w += 1001;
+            }
+
+            const an = try allocator.create(Node);
+            an.* = Node{ .tile = tile, .pos = np, .dir = d, .w = w, .parent = node };
+
+            neighbors[idx] = an;
+            idx += 1;
         }
     }
 
-    return res;
+    return neighbors;
 }
 
 fn findStart(map: *utils.Matrix(u8)) !Vec2 {
@@ -255,10 +180,12 @@ test "example 1" {
     const result = try solution(std.testing.allocator, "input/16_input_test1.txt");
 
     try std.testing.expectEqual(@as(u32, 7036), result[0]);
+    try std.testing.expectEqual(@as(u32, 45), result[1]);
 }
 
 test "example 2" {
     const result = try solution(std.testing.allocator, "input/16_input_test2.txt");
 
     try std.testing.expectEqual(@as(u32, 11048), result[0]);
+    try std.testing.expectEqual(@as(u32, 64), result[1]);
 }

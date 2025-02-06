@@ -31,6 +31,7 @@ pub fn build(b: *std.Build) void {
     buildExe(b, target, optimize, "14_restroom_redoubt", "src/14_restroom_redoubt.zig");
     buildExe(b, target, optimize, "15_warehouse_woes", "src/15_warehouse_woes.zig");
     buildExe(b, target, optimize, "16_reindeer_maze", "src/16_reindeer_maze.zig");
+    buildExe(b, target, optimize, "17_chronospatial_computer", "src/17_chronospatial_computer.zig");
 }
 
 fn buildExe(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode, comptime name: []const u8, comptime src_file_path: []const u8) void {

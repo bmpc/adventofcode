@@ -4,7 +4,7 @@ const utils = @import("utils.zig");
 const assert = std.debug.assert;
 const Tuple = std.meta.Tuple(&.{ []u8, u32 });
 
-// 3-bit number computer
+// 3-bit computer
 // 3 registers: A, B, C
 // 8 instructions
 //
@@ -61,43 +61,36 @@ const Computer = struct {
             const operand: u3 = self.input[self.ip + 1];
             switch (opcode) {
                 Opcode.ADV => {
-                    self.a = self.a / (@as(u32, 2) << try self.resolveCombo(operand));
-                    self.ip += 2;
+                    self.a = self.a / std.math.pow(u32, 2, try self.resolveCombo(operand));
                 },
                 Opcode.BXL => {
                     self.b = self.b ^ operand;
-                    self.ip += 2;
                 },
                 Opcode.BST => {
                     self.b = try self.resolveCombo(operand) % 8;
-                    self.ip += 2;
                 },
                 Opcode.JNZ => {
                     if (self.a > 0) {
                         self.ip = operand;
-                    } else {
-                        self.ip += 2;
+                        continue;
                     }
                 },
                 Opcode.BXC => {
-                    self.b = self.b | self.c;
-                    self.ip += 2;
+                    self.b = self.b ^ self.c;
                 },
                 Opcode.OUT => {
-                    //std.debug.print("{d}", .{});
                     const m = try self.resolveCombo(operand) % 8;
-                    try self.output.append(m);
-                    self.ip += 2;
+                    try self.output.append(@intCast(m));
                 },
                 Opcode.BDV => {
-                    self.b = self.a / (2 << try self.resolveCombo(operand));
-                    self.ip += 2;
+                    self.b = self.a / std.math.pow(u32, 2, try self.resolveCombo(operand));
                 },
                 Opcode.CDV => {
-                    self.c = self.a / (2 << try self.resolveCombo(operand));
-                    self.ip += 2;
+                    self.c = self.a / std.math.pow(u32, 2, try self.resolveCombo(operand));
                 },
             }
+
+            self.ip += 2;
         }
     }
 
@@ -111,7 +104,7 @@ const Computer = struct {
         };
     }
 
-    pub fn deinit(self: *Self) !void {
+    pub fn deinit(self: *Self) void {
         self.output.deinit();
         self.allocator.free(self.input);
     }
@@ -137,34 +130,38 @@ fn solution(allocator: std.mem.Allocator, input: []const u8) !Tuple {
 
     var lines_it = std.mem.split(u8, data, "\n");
     var src_input: std.ArrayList(u3) = std.ArrayList(u3).init(allocator);
-    //defer input.deinit();
+    defer src_input.deinit();
 
-    var reg_a: u3 = 0;
-    var reg_b: u3 = 0;
-    var reg_c: u3 = 0;
+    var reg_a: u32 = 0;
+    var reg_b: u32 = 0;
+    var reg_c: u32 = 0;
 
     while (lines_it.next()) |line| {
         var it = std.mem.split(u8, line, ": ");
+
+        if (it.peek() == null) continue;
         const name = it.next().?;
+
+        if (it.peek() == null) continue;
         const value = it.next().?;
 
         if (std.mem.eql(u8, name, "Register A")) {
-            reg_a = try std.fmt.parseInt(u3, value, 3);
+            reg_a = try std.fmt.parseInt(u32, value, 10);
         }
 
         if (std.mem.eql(u8, name, "Register B")) {
-            reg_b = try std.fmt.parseInt(u3, value, 3);
+            reg_b = try std.fmt.parseInt(u32, value, 10);
         }
 
         if (std.mem.eql(u8, name, "Register C")) {
-            reg_c = try std.fmt.parseInt(u3, value, 3);
+            reg_c = try std.fmt.parseInt(u32, value, 10);
         }
 
         if (std.mem.eql(u8, name, "Program")) {
             var iit = std.mem.split(u8, value, ",");
 
             while (iit.next()) |v| {
-                const out = try std.fmt.parseInt(u3, v, 3);
+                const out = try std.fmt.parseInt(u3, v, 10);
                 try src_input.append(out);
             }
         }
@@ -174,23 +171,17 @@ fn solution(allocator: std.mem.Allocator, input: []const u8) !Tuple {
     try computer.reset(allocator, reg_a, reg_b, reg_c, try src_input.toOwnedSlice());
 
     try computer.run();
-    for (computer.output.items) |item| {
-        std.debug.print("{d},", .{item});
-    }
 
-    const len = (computer.output.len * 2) - 1;
-    const res1 = allocator.create(u8, len);
+    const len = (computer.output.items.len * 2) - 1;
+    const res1 = try allocator.alloc(u8, len);
     var idx: usize = 0;
-    for (computer.output.items, 0..computer.output.len) |item, i| {
-        res1[idx] = @intCast(item);
-        if (i < computer.output.len - 1) {
+    for (computer.output.items, 0..computer.output.items.len) |item, i| {
+        res1[idx] = '0' + @as(u8, @intCast(item));
+        if (i < computer.output.items.len - 1) {
             res1[idx + 1] = ',';
             idx += 2;
         }
     }
-
-    // TODO: convert array of u32 numbers to ...
-    //const res1 = join(allocator, ",", computer.output);
 
     defer computer.deinit();
 
@@ -201,6 +192,6 @@ test "example 1" {
     const result = try solution(std.testing.allocator, "input/17_input_test.txt");
     defer std.testing.allocator.free(result[0]);
 
-    try std.testing.expectEqual("4,6,3,5,6,3,5,2,1,0", result[0]);
-    //try std.testing.expectEqual(@as(u32, 45), result[1]);
+    try std.testing.expectEqualStrings("4,6,3,5,6,3,5,2,1,0", result[0]);
+    //try std.testing.expectEqual(@as(u32, 0), result[1]);
 }

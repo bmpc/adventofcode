@@ -55,7 +55,7 @@ const Computer = struct {
         self.output = std.ArrayList(u3).init(allocator);
     }
 
-    pub fn run(self: *Self) !void {
+    pub fn run(self: *Self, check_copy: bool) !bool {
         while (self.ip < self.input.len - 1) {
             const opcode: Opcode = @enumFromInt(self.input[self.ip]);
             const operand: u3 = self.input[self.ip + 1];
@@ -81,6 +81,11 @@ const Computer = struct {
                 Opcode.OUT => {
                     const m = try self.resolveCombo(operand) % 8;
                     try self.output.append(@intCast(m));
+                    if (check_copy) {
+                        if (m != self.input[self.output.items.len - 1]) {
+                            return false;
+                        }
+                    }
                 },
                 Opcode.BDV => {
                     self.b = self.a / std.math.pow(u32, 2, try self.resolveCombo(operand));
@@ -92,6 +97,8 @@ const Computer = struct {
 
             self.ip += 2;
         }
+
+        return std.mem.eql(u3, self.input, self.output.items);
     }
 
     fn resolveCombo(self: *Self, combo: u3) !u32 {
@@ -167,10 +174,13 @@ fn solution(allocator: std.mem.Allocator, input: []const u8) !Tuple {
         }
     }
 
-    var computer: Computer = .{};
-    try computer.reset(allocator, reg_a, reg_b, reg_c, try src_input.toOwnedSlice());
+    const src = try src_input.toOwnedSlice();
 
-    try computer.run();
+    var computer: Computer = .{};
+    try computer.reset(allocator, reg_a, reg_b, reg_c, src);
+
+    // part 1
+    _ = try computer.run(false);
 
     const len = (computer.output.items.len * 2) - 1;
     const res1 = try allocator.alloc(u8, len);
@@ -183,15 +193,30 @@ fn solution(allocator: std.mem.Allocator, input: []const u8) !Tuple {
         }
     }
 
+    // part 2
+    // var sol: u32 = 1;
+    // while (true) {
+    //     try computer.reset(allocator, sol, 0, 0, src);
+    //     const is_copy = try computer.run(true);
+    //     if (is_copy) break;
+
+    //     sol += 1;
+    // }
+
     defer computer.deinit();
 
     return .{ res1, 0 };
 }
 
 test "example 1" {
-    const result = try solution(std.testing.allocator, "input/17_input_test.txt");
+    const result = try solution(std.testing.allocator, "input/17_input_test1.txt");
     defer std.testing.allocator.free(result[0]);
 
     try std.testing.expectEqualStrings("4,6,3,5,6,3,5,2,1,0", result[0]);
-    //try std.testing.expectEqual(@as(u32, 0), result[1]);
 }
+
+// test "example 2" {
+//     const result = try solution(std.testing.allocator, "input/17_input_test2.txt");
+
+//     try std.testing.expectEqual(@as(u32, 117440), result[1]);
+// }

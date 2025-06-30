@@ -35,7 +35,7 @@ fn solution(allocator: std.mem.Allocator, input: []const u8) !Tuple {
     const data = try utils.readFile(&allocator, input);
     defer allocator.free(data);
 
-    var parts_it = std.mem.split(u8, data, "\n\n");
+    var parts_it = std.mem.splitSequence(u8, data, "\n\n");
 
     var map = try utils.Matrix(u8).initFromSequence(parts_it.next().?, "\n", allocator);
     defer map.deinit();
@@ -46,7 +46,7 @@ fn solution(allocator: std.mem.Allocator, input: []const u8) !Tuple {
     defer directions.deinit();
 
     const dirs = parts_it.next().?;
-    var lines_it = std.mem.split(u8, dirs, "\n");
+    var lines_it = std.mem.splitSequence(u8, dirs, "\n");
 
     var l: usize = 0;
     while (lines_it.next()) |line| {

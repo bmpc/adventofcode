@@ -135,7 +135,7 @@ fn solution(allocator: std.mem.Allocator, input: []const u8) !Tuple {
     const data = try utils.readFile(&allocator, input);
     defer allocator.free(data);
 
-    var lines_it = std.mem.split(u8, data, "\n");
+    var lines_it = std.mem.splitSequence(u8, data, "\n");
     var src_input: std.ArrayList(u3) = std.ArrayList(u3).init(allocator);
     defer src_input.deinit();
 
@@ -144,7 +144,7 @@ fn solution(allocator: std.mem.Allocator, input: []const u8) !Tuple {
     var reg_c: u32 = 0;
 
     while (lines_it.next()) |line| {
-        var it = std.mem.split(u8, line, ": ");
+        var it = std.mem.splitSequence(u8, line, ": ");
 
         if (it.peek() == null) continue;
         const name = it.next().?;
@@ -165,7 +165,7 @@ fn solution(allocator: std.mem.Allocator, input: []const u8) !Tuple {
         }
 
         if (std.mem.eql(u8, name, "Program")) {
-            var iit = std.mem.split(u8, value, ",");
+            var iit = std.mem.splitSequence(u8, value, ",");
 
             while (iit.next()) |v| {
                 const out = try std.fmt.parseInt(u3, v, 10);

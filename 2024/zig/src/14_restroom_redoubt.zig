@@ -23,20 +23,20 @@ fn solution(allocator: std.mem.Allocator, input: []const u8, size: Vec2) !Tuple 
     const data = try utils.readFile(&allocator, input);
     defer allocator.free(data);
 
-    var lines_it = std.mem.split(u8, data, "\n");
+    var lines_it = std.mem.splitSequence(u8, data, "\n");
 
     var robots: std.ArrayList(Robot) = std.ArrayList(Robot).init(allocator);
     defer robots.deinit();
 
     while (lines_it.next()) |line| {
-        var it = std.mem.split(u8, line, " ");
+        var it = std.mem.splitSequence(u8, line, " ");
         var p = it.next().?;
         var v = it.next().?;
 
-        it = std.mem.split(u8, p[2..], ",");
+        it = std.mem.splitSequence(u8, p[2..], ",");
         const px = try std.fmt.parseInt(i32, it.next().?, 10);
         const py = try std.fmt.parseInt(i32, it.next().?, 10);
-        it = std.mem.split(u8, v[2..], ",");
+        it = std.mem.splitSequence(u8, v[2..], ",");
         const vx = try std.fmt.parseInt(i32, it.next().?, 10);
         const vy = try std.fmt.parseInt(i32, it.next().?, 10);
 

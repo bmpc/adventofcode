@@ -22,7 +22,7 @@ fn solution(allocator: std.mem.Allocator, input: []const u8, iterations: usize) 
     const data = try utils.readFile(&allocator, input);
     defer allocator.free(data);
 
-    var stones_it = std.mem.split(u8, data, " ");
+    var stones_it = std.mem.splitSequence(u8, data, " ");
 
     var stones = try std.ArrayList(u128).initCapacity(allocator, 100000);
     defer stones.deinit();

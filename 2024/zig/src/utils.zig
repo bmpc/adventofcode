@@ -51,7 +51,7 @@ pub fn Matrix(comptime T: type) type {
         }
 
         pub fn initFromSequence(seq: []const T, delimiter: []const u8, allocator: std.mem.Allocator) !Self {
-            var rows = std.mem.split(T, seq, delimiter);
+            var rows = std.mem.splitSequence(T, seq, delimiter);
             var list = std.ArrayList(T).init(allocator);
 
             var width: usize = 0;

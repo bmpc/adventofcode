@@ -19,7 +19,7 @@ fn solution(allocator: std.mem.Allocator, input: []const u8) !Tuple {
     const content = try utils.readFile(&allocator, input);
     defer allocator.free(content);
 
-    var lines = std.mem.split(u8, content, "\n");
+    var lines = std.mem.splitSequence(u8, content, "\n");
 
     var list_a = std.ArrayList(i32).init(allocator);
     defer list_a.deinit();
@@ -28,7 +28,7 @@ fn solution(allocator: std.mem.Allocator, input: []const u8) !Tuple {
     defer list_b.deinit();
 
     while (lines.next()) |line| {
-        var pair = std.mem.split(u8, line, "   ");
+        var pair = std.mem.splitSequence(u8, line, "   ");
         const str_a = pair.next();
         assert(str_a != null);
         const str_b = pair.next();

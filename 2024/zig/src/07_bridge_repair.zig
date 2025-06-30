@@ -26,7 +26,7 @@ fn solution(allocator: std.mem.Allocator, input: []const u8) !Tuple {
     const content = try utils.readFile(&allocator, input);
     defer allocator.free(content);
 
-    var lines = std.mem.split(u8, content, "\n");
+    var lines = std.mem.splitSequence(u8, content, "\n");
 
     var equations = std.ArrayList(Equation).init(allocator);
     defer {
@@ -37,7 +37,7 @@ fn solution(allocator: std.mem.Allocator, input: []const u8) !Tuple {
     }
 
     while (lines.next()) |line| {
-        var parts = std.mem.split(u8, line, " ");
+        var parts = std.mem.splitSequence(u8, line, " ");
         const result_str = parts.next().?;
 
         const res_str = result_str[0 .. result_str.len - 1]; // removing the colon from the result

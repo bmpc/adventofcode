@@ -27,7 +27,7 @@ fn solution(allocator: std.mem.Allocator, input: []const u8) !Tuple(u64) {
     const data = try utils.readFile(&allocator, input);
     defer allocator.free(data);
 
-    var lines_it = std.mem.split(u8, data, "\n");
+    var lines_it = std.mem.splitSequence(u8, data, "\n");
 
     var machines: std.ArrayList(Machine) = std.ArrayList(Machine).init(allocator);
     defer machines.deinit();
@@ -44,7 +44,7 @@ fn solution(allocator: std.mem.Allocator, input: []const u8) !Tuple(u64) {
             bx = try std.fmt.parseInt(i64, line[12..14], 10);
             by = try std.fmt.parseInt(i64, line[18..20], 10);
         } else if (std.mem.startsWith(u8, line, "Prize: ")) {
-            var it = std.mem.split(u8, line[7..], ", ");
+            var it = std.mem.splitSequence(u8, line[7..], ", ");
             const px = try std.fmt.parseInt(i64, (it.next().?)[2..], 10);
             const py = try std.fmt.parseInt(i64, (it.next().?)[2..], 10);
 

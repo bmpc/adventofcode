@@ -19,7 +19,7 @@ fn solution(allocator: std.mem.Allocator, input: []const u8) !Tuple {
     const data = try utils.readFile(&allocator, input);
     defer allocator.free(data);
 
-    var lines = std.mem.split(u8, data, "\n");
+    var lines = std.mem.splitSequence(u8, data, "\n");
 
     var page_ordering = std.StringHashMap(bool).init(allocator);
     defer page_ordering.deinit();
@@ -46,7 +46,7 @@ fn solution(allocator: std.mem.Allocator, input: []const u8) !Tuple {
 
         var update_l = std.ArrayList([]const u8).init(allocator);
 
-        var pages = std.mem.split(u8, update, ",");
+        var pages = std.mem.splitSequence(u8, update, ",");
         while (pages.next()) |page| {
             try update_l.append(page);
         }
